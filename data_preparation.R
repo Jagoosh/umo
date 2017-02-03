@@ -95,3 +95,37 @@ competence <- read_csv("data/DB_competence.csv")
 #   write_csv("data/DB_subject.csv")
 
 subject <- read_csv("data/DB_subject.csv")
+
+# edges competence-subject ------------------------------------------------
+
+
+# edges <- bind_rows(
+#   read_excel(
+#     "data/БД 38.03.06 ТД Коммерция.xls",
+#     sheet = 2,
+#     col_names = c("id", "code", "name")
+#   ) %>%
+#     mutate(profile = "Коммерция"),
+#   read_excel(
+#     "data/БД 38.03.06 ТД Логистика.xls",
+#     sheet = 2,
+#     col_names = c("id", "code", "name")
+#   ) %>%
+#     mutate(profile = "Логистика")
+# ) %>%
+#   bind_rows(
+#     read_excel(
+#       "data/БД 38.03.06 ТД Маркетинг.xls",
+#       sheet = 2,
+#       col_names = c("id", "code", "name")
+#     ) %>%
+#       mutate(profile = "Маркетинг")
+#   )
+# 
+# edges %>% 
+#   select(- name) %>% 
+#   right_join(subject, by = c("code", "profile")) %>% 
+#   select(id, code, profile) %>% 
+#   write_csv("data/DB_edges_competence-subject.csv")
+
+edges <- read_csv("data/DB_edges_competence-subject.csv")
