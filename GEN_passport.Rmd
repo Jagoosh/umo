@@ -1,0 +1,121 @@
+---
+output:
+  odt_document:
+    reference_odt: GEN_passport_ref.odt
+  # word_document:
+  #   reference_docx: GEN_passport_ref.docx
+params:
+  idx: "ОК-6"
+---
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, include=FALSE}
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, error=FALSE)
+
+competence <- read_csv(
+  "data/DB_competence.csv"
+) %>% 
+  mutate(
+    id = factor(
+      id,
+      levels = c(
+        "ОК-1", "ОК-2", "ОК-3", "ОК-4", "ОК-5", "ОК-6", "ОК-7", "ОК-8", "ОК-9",
+        "ОК-10", "ОПК-1", "ОПК-2", "ОПК-3", "ОПК-4", "ОПК-5", "ПК-1", "ПК-2",
+        "ПК-3", "ПК-4", "ПК-5", "ПК-6", "ПК-7", "ПК-8", "ПК-9", "ПК-10", "ПК-11",
+        "ПК-12", "ПК-13", "ПК-14", "ПК-15"
+      )
+    )
+  )
+
+learning_outcomes <- read_csv(
+  "data/DB_content.csv"
+) %>% 
+  mutate(
+    id = factor(
+      id,
+      levels = c(
+        "ОК-1", "ОК-2", "ОК-3", "ОК-4", "ОК-5", "ОК-6", "ОК-7", "ОК-8", "ОК-9",
+        "ОК-10", "ОПК-1", "ОПК-2", "ОПК-3", "ОПК-4", "ОПК-5", "ПК-1", "ПК-2",
+        "ПК-3", "ПК-4", "ПК-5", "ПК-6", "ПК-7", "ПК-8", "ПК-9", "ПК-10", "ПК-11",
+        "ПК-12", "ПК-13", "ПК-14", "ПК-15"
+      )
+    ),
+    lvl = factor(
+      lvl,
+      levels = c(
+        "Пороговый уровень", "Повышенный уровень", "Продвинутый уровень",
+        "Структура компетенции"
+      )
+    ),
+    type = factor(
+      type,
+      levels = c(
+        "Знать", "Уметь", "Владеть"
+      )
+    )
+  )
+
+verbs <- read_csv(
+  "data/DB_verbs.csv"
+) %>% 
+  mutate(
+    lvl = factor(
+      lvl,
+      levels = c(
+        "Пороговый уровень", "Повышенный уровень", "Продвинутый уровень",
+        "Структура компетенции"
+      )
+    )
+  )
+
+by_type <- learning_outcomes %>% 
+  filter(id == params$idx, ! is.na(type)) %>% 
+  select(-verb) %>% 
+  group_by(lvl, type) %>% 
+  select(description) %>% 
+  summarise(description = paste(description, collapse = "; ")) %>% 
+  group_by(lvl) %>% 
+  summarise(description = paste(paste0("**", type, "**"), description, sep = ": ", collapse = "; "))
+
+by_verb <- learning_outcomes %>% 
+  filter(id == params$idx, ! is.na(verb)) %>% 
+  select(-lvl, -type) %>% 
+  left_join(verbs) %>% 
+  group_by(lvl, verb) %>% 
+  select(description) %>% 
+  summarise(description = paste(description, collapse = "; ")) %>% 
+  group_by(lvl) %>% 
+  summarise(description = paste(paste0("**", verb, "**"), description, sep = ": ", collapse = "; "))
+```
+
+# Паспорт формирования компетенции `r competence %>% filter(id == params$idx) %>% transmute(paste0(id, " — ", content)) %>% unlist()`
+
+## Принятая структура компетенции
+
+```{r results='asis'}
+learning_outcomes %>% 
+  filter(id == params$idx, lvl == "Структура компетенции", !is.na(type)) %>% 
+  group_by(type) %>% 
+  summarise(description = paste(description, collapse = "; ")) %>% 
+  mutate(type = paste0("**", type, "**")) %>% 
+  kable(
+    col.names = c(
+      "     ", "Бакалавр должен:"
+    )
+  )
+```
+
+## Планируемые уровни сформированности компетенции у выпускников ВУЗа
+
+```{r results='asis'}
+right_join(by_type, by_verb, by = "lvl") %>% 
+  kable(
+    col.names = c(
+      "Уровни компетенции",
+      "Содержательное описание уровня", 
+      "Основные признаки уровня"
+      )
+    )
+```
+
